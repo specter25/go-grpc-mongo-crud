@@ -1,6 +1,6 @@
 syntax="proto3";
 package blog;
-option go_package="blogpb";
+option go_package=".;blogpb";
 
 service BlogService {
     rpc CreateBlog(CreateBlogReq) returns (CreateBlogRes);
