@@ -16,11 +16,15 @@ import (
 
 func main() {
 
+	//Connect to the mongodb Instance
+	conn.ConnectDB()
+	db := conn.GetMongoClient()
+	blogdb := db.Database("my_databse").Collection("blogs")
 	//establish the grpc instance
 	l := hclog.Default()
 	opts := []grpc.ServerOption{}
 	gs := grpc.NewServer(opts...)
-	srv := server.NewBlogServiceServer(l)
+	srv := server.NewBlogServiceServer(l, db, blogdb)
 	blogpb.RegisterBlogServiceServer(gs, srv)
 	reflection.Register(gs)
 
@@ -29,9 +33,6 @@ func main() {
 	if err != nil {
 		l.Error("unable to listen to port no 50051")
 	}
-
-	//Connect to the mongodb Instance
-	conn.ConnectDB()
 
 	//satrt the server
 	go func() {
