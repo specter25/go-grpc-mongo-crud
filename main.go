@@ -6,7 +6,7 @@ import (
 	"os/signal"
 
 	"github.com/specter25/go-grpc-mongo-crud/conn"
-	blogpb "github.com/specter25/go-grpc-mongo-crud/protos/blogs"
+	blogpb "github.com/specter25/go-grpc-mongo-crud/protos/blog"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/specter25/go-grpc-mongo-crud/server"

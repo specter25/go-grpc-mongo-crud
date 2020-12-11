@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/go-hclog"
-	blogpb "github.com/specter25/go-grpc-mongo-crud/protos/blogs"
+	blogpb "github.com/specter25/go-grpc-mongo-crud/protos/blog"
 )
 
 type BlogServiceServer struct {
