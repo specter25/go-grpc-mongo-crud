@@ -2,6 +2,7 @@ package conn
 
 import (
 	"context"
+	"os"
 
 	"github.com/hashicorp/go-hclog"
 
@@ -13,12 +14,13 @@ var db *mongo.Client
 var mongoCtx context.Context
 
 func ConnectDB() {
+
 	var err error
 	log := hclog.Default()
 	log.Debug("Connecting to MongoDB....")
 	mongoCtx := context.Background()
 
-	db, err = mongo.Connect(mongoCtx, options.Client().ApplyURI("mongodb+srv://ujjwal:ujjwal@cluster1.khf9x.mongodb.net/test?retryWrites=true&w=majority"))
+	db, err = mongo.Connect(mongoCtx, options.Client().ApplyURI(os.Getenv("MONGO_URI")))
 
 	if err != nil {
 		log.Error("connot connect with the database", err)

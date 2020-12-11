@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -9,13 +10,17 @@ import (
 	blogpb "github.com/specter25/go-grpc-mongo-crud/protos/blog"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/joho/godotenv"
 	"github.com/specter25/go-grpc-mongo-crud/server"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
 func main() {
-
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 	//Connect to the mongodb Instance
 	conn.ConnectDB()
 	db := conn.GetMongoClient()
