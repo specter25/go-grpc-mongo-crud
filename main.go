@@ -16,28 +16,24 @@ import (
 
 func main() {
 
+	//establish the grpc instance
 	l := hclog.Default()
-
-	//Set options , here we can configure things like TLS support
 	opts := []grpc.ServerOption{}
-	//Create a new grpc server with blank support
 	gs := grpc.NewServer(opts...)
-	//create blogs type
-	srv := server.NewBlogs(l)
-	//Register the service with the server
+	srv := server.NewBlogServiceServer(l)
 	blogpb.RegisterBlogServiceServer(gs, srv)
 	reflection.Register(gs)
 
 	//Start out listner at port no 50051 , this is the defaulat groc port
 	listener, err := net.Listen("tcp", ":50051")
-	//Handle any errors if they occur
 	if err != nil {
-		l.Error("unable to listena t port no 50051")
+		l.Error("unable to listen to port no 50051")
 	}
 
 	//Connect to the mongodb Instance
 	conn.ConnectDB()
 
+	//satrt the server
 	go func() {
 		err := gs.Serve(listener)
 		if err != nil {
@@ -46,6 +42,7 @@ func main() {
 		}
 	}()
 
+	//handle graceful server shutdown
 	sigChan := make(chan os.Signal)
 	signal.Notify(sigChan, os.Interrupt)
 	signal.Notify(sigChan, os.Kill)

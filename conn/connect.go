@@ -2,7 +2,6 @@ package conn
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/go-hclog"
 
@@ -16,7 +15,6 @@ var mongoCtx context.Context
 func ConnectDB() {
 	log := hclog.Default()
 	log.Debug("Connecting to MongoDB....")
-	//non-nil empty context
 	mongoCtx := context.Background()
 	//Connect takes in a context and options , the connection uri is the only option we pass now
 	db, err := mongo.Connect(mongoCtx, options.Client().ApplyURI("mongodb+srv://ujjwal:ujjwal@cluster1.khf9x.mongodb.net/test?retryWrites=true&w=majority"))
@@ -29,7 +27,7 @@ func ConnectDB() {
 	if err != nil {
 		log.Error("Could not connect to MongoDB: %v\n", err)
 	} else {
-		fmt.Println("Connected to Mongodb")
+		log.Info("Connected to Mongodb")
 	}
 }
 

@@ -11,7 +11,7 @@ type BlogServiceServer struct {
 	log hclog.Logger
 }
 
-func NewBlogs(log hclog.Logger) *BlogServiceServer {
+func NewBlogServiceServer(log hclog.Logger) *BlogServiceServer {
 	c := &BlogServiceServer{log}
 	return c
 }
