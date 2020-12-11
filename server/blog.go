@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -30,7 +31,7 @@ func (b *BlogServiceServer) CreateBlog(ctx context.Context, req *blogpb.CreateBl
 	blog := req.GetBlog()
 
 	data := models.BlogItem{
-		AuthorID: blog.GetAuthorId(),
+		AuthorId: blog.GetAuthorId(),
 		Title:    blog.GetTitle(),
 		Content:  blog.GetContent(),
 	}
@@ -49,7 +50,27 @@ func (b *BlogServiceServer) CreateBlog(ctx context.Context, req *blogpb.CreateBl
 }
 func (b *BlogServiceServer) ReadBlog(ctx context.Context, req *blogpb.ReadBlogReq) (*blogpb.ReadBlogRes, error) {
 
-	return nil, nil
+	// convert Id from string to objectId
+	oid, err := primitive.ObjectIDFromHex(req.GetId())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("could not convert to objectID %s:%v", req.GetId(), err))
+	}
+	result := b.blogdb.FindOne(ctx, bson.M{"_id": oid})
+	data := models.BlogItem{}
+
+	if err = result.Decode(&data); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("could not find the blog with this object Id %s:%v", req.GetId(), err))
+	}
+
+	response := &blogpb.ReadBlogRes{
+		Blog: &blogpb.Blog{
+			Id:       oid.Hex(),
+			AuthorId: data.AuthorId,
+			Title:    data.Title,
+			Content:  data.Content,
+		},
+	}
+	return response, nil
 
 }
 func (b *BlogServiceServer) UpdateBlog(ctx context.Context, req *blogpb.UpdateBlogReq) (*blogpb.UpdateBlogRes, error) {
