@@ -120,8 +120,33 @@ func (b *BlogServiceServer) DeleteBlog(ctx context.Context, req *blogpb.DeleteBl
 	}, nil
 
 }
-func (s *BlogServiceServer) ListBlog(req *blogpb.ListBlogReq, stream blogpb.BlogService_ListBlogServer) error {
+func (b *BlogServiceServer) ListBlog(req *blogpb.ListBlogReq, stream blogpb.BlogService_ListBlogServer) error {
 
+	data := &models.BlogItem{}
+	cursor, err := b.blogdb.Find(context.Background(), bson.M{})
+	if err != nil {
+		return status.Errorf(codes.Internal, fmt.Sprintf("Unknown internal error %v", err))
+	}
+	defer cursor.Close(context.Background())
+
+	for cursor.Next(context.Background()) {
+		err := cursor.Decode(data)
+		if err != nil {
+			return status.Errorf(codes.Unavailable, fmt.Sprintf("could not decode the data %v", err))
+
+		}
+		stream.Send(&blogpb.ListBlogRes{
+			Blog: &blogpb.Blog{
+				Id:       data.ID.Hex(),
+				AuthorId: data.AuthorId,
+				Title:    data.Title,
+				Content:  data.Content,
+			},
+		})
+	}
+	// Check if the cursor has any errors
+	if err := cursor.Err(); err != nil {
+		return status.Errorf(codes.Internal, fmt.Sprintf("Unkown cursor error: %v", err))
+	}
 	return nil
-
 }
