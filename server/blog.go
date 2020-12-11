@@ -6,6 +6,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -75,12 +76,48 @@ func (b *BlogServiceServer) ReadBlog(ctx context.Context, req *blogpb.ReadBlogRe
 }
 func (b *BlogServiceServer) UpdateBlog(ctx context.Context, req *blogpb.UpdateBlogReq) (*blogpb.UpdateBlogRes, error) {
 
-	return nil, nil
+	blog := req.GetBlog()
+	oid, err := primitive.ObjectIDFromHex(blog.GetId())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("could not convert to objectID %v", err))
+	}
+	update := bson.M{
+		"author_id": blog.GetAuthorId(),
+		"title":     blog.GetTitle(),
+		"content":   blog.GetContent(),
+	}
+	filter := bson.M{"_id": oid}
+	result := b.blogdb.FindOneAndUpdate(ctx, filter, bson.M{"$set": update}, options.FindOneAndUpdate().SetReturnDocument(1))
+
+	decoded := models.BlogItem{}
+	err = result.Decode(&decoded)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, fmt.Sprintf("could not find the blog with this object Id : %v", err))
+	}
+	return &blogpb.UpdateBlogRes{
+		Blog: &blogpb.Blog{
+			Id:       decoded.ID.Hex(),
+			AuthorId: decoded.AuthorId,
+			Title:    decoded.Title,
+			Content:  decoded.Content,
+		},
+	}, nil
 
 }
 func (b *BlogServiceServer) DeleteBlog(ctx context.Context, req *blogpb.DeleteBlogReq) (*blogpb.DeleteBlogRes, error) {
+	oid, err := primitive.ObjectIDFromHex(req.GetId())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("could not convert to objectID %s:%v", req.GetId(), err))
+	}
 
-	return nil, nil
+	_, err = b.blogdb.DeleteOne(ctx, bson.M{"_id": oid})
+
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("could not find the blog to delete %s:%v", req.GetId(), err))
+	}
+	return &blogpb.DeleteBlogRes{
+		Success: true,
+	}, nil
 
 }
 func (s *BlogServiceServer) ListBlog(req *blogpb.ListBlogReq, stream blogpb.BlogService_ListBlogServer) error {
